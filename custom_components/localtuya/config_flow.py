@@ -92,7 +92,7 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_LOCAL_KEY): cv.string,
         vol.Required(CONF_PROTOCOL_VERSION, default="3.3"): vol.In(
-            ["3.1", "3.2", "3.3", "3.4"]
+            ["3.1", "3.2", "3.3", "3.4", "3.5"]
         ),
         vol.Required(CONF_ENABLE_DEBUG, default=False): bool,
         vol.Optional(CONF_SCAN_INTERVAL): int,
@@ -138,7 +138,7 @@ def options_schema(entities):
             vol.Required(CONF_HOST): cv.string,
             vol.Required(CONF_LOCAL_KEY): cv.string,
             vol.Required(CONF_PROTOCOL_VERSION, default="3.3"): vol.In(
-                ["3.1", "3.2", "3.3", "3.4"]
+                ["3.1", "3.2", "3.3", "3.4", "3.5"]
             ),
             vol.Required(CONF_ENABLE_DEBUG, default=False): bool,
             vol.Optional(CONF_SCAN_INTERVAL): int,
@@ -159,7 +159,8 @@ def schema_defaults(schema, dps_list=None, **defaults):
         if isinstance(field_type, vol.In):
             value = None
             for dps in dps_list or []:
-                if dps.startswith(f"{defaults.get(field)} "):
+                # FIX: use field.schema (key name) instead of field object
+                if dps.startswith(f"{defaults.get(field.schema)} "):
                     value = dps
                     break
 
@@ -168,7 +169,8 @@ def schema_defaults(schema, dps_list=None, **defaults):
                 continue
 
         if field.schema in defaults:
-            field.default = vol.default_factory(defaults[field])
+            # FIX: use field.schema (key name) instead of field object
+            field.default = vol.default_factory(defaults[field.schema])
     return copy
 
 
@@ -393,7 +395,7 @@ class LocalTuyaOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize localtuya options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry # Changed from self.config_entry to avoid AttributeError
         # self.dps_strings = config_entry.data.get(CONF_DPS_STRINGS, gen_dps_strings())
         # self.entities = config_entry.data[CONF_ENTITIES]
         self.selected_device = None
